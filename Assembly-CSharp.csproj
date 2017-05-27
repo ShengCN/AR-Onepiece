@@ -46,6 +46,12 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+     <Compile Include="Assets\Dwarf Pack\Dwarves\Projectiles\Magic Missile\humanMissileTail.cs" />
+     <Compile Include="Assets\Dwarf Pack\Scripts\DestroyByTime.cs" />
+     <Compile Include="Assets\Dwarf Pack\Scripts\WalkingOrc.cs" />
+     <Compile Include="Assets\Dwarf Pack\Scripts\fadingLight.cs" />
+     <Compile Include="Assets\Dwarf Pack\Scripts\gameContoller.cs" />
+     <Compile Include="Assets\Dwarf Pack\Scripts\triggerProjectile.cs" />
      <Compile Include="Assets\Environment\Standard Assets\Effects\ImageEffects\Scripts\Antialiasing.cs" />
      <Compile Include="Assets\Environment\Standard Assets\Effects\ImageEffects\Scripts\Bloom.cs" />
      <Compile Include="Assets\Environment\Standard Assets\Effects\ImageEffects\Scripts\BloomAndFlares.cs" />
@@ -91,6 +97,7 @@
      <None Include="Assets\Environment\Standard Assets\Effects\ImageEffects\Shaders\ColorCorrectionCurves.shader" />
      <None Include="Assets\Environment\Standard Assets\Effects\ImageEffects\Shaders\ScreenSpaceAmbientObscurance.shader" />
      <None Include="Assets\Environment\Standard Assets\Effects\ImageEffects\Shaders\_Antialiasing\NFAA.shader" />
+     <None Include="Assets\Dwarf Pack\README.txt" />
      <None Include="Assets\Environment\Standard Assets\Effects\ImageEffects\Shaders\_DepthOfField\TiltShiftHdrLensBlur.shader" />
      <None Include="Assets\Environment\Standard Assets\Effects\ImageEffects\Shaders\_DepthOfField\DepthOfFieldScatter.shader" />
      <None Include="Assets\Environment\Standard Assets\Effects\ImageEffects\Shaders\MotionBlur.shader" />
