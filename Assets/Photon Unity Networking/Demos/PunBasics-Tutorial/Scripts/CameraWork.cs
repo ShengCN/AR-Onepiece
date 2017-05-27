@@ -36,6 +36,8 @@ namespace ExitGames.Demos.DemoAnimator
 		[Tooltip("Set this as false if a component of a prefab being instanciated by Photon Network, and manually call OnStartFollowing() when and if needed.")]
 		public bool followOnStart = false;
 
+		public float testY = 0.01f;
+
 		#endregion
 		
 		#region Private Properties
@@ -168,7 +170,7 @@ namespace ExitGames.Demos.DemoAnimator
 	        Vector3 offsetToCenter = centerPos - cameraPos;
 
 	        // Generate base rotation only around y-axis
-	        Quaternion yRotation = Quaternion.LookRotation( new Vector3( offsetToCenter.x, 0, offsetToCenter.z ) );
+			Quaternion yRotation = Quaternion.LookRotation( new Vector3( offsetToCenter.x, testY, offsetToCenter.z ) );
 
 	        Vector3 relativeOffset = Vector3.forward * distance + Vector3.down * height;
 	        cameraTransform.rotation = yRotation * Quaternion.LookRotation( relativeOffset );
