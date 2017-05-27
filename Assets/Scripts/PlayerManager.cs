@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.Events;
 
 public class PlayerManager : Photon.PunBehaviour, IPunObservable {
-	public GameObject Beams;
+//	public GameObject Beams;
 	public int currentScore = 0;
 	bool isFiring;
 
@@ -20,13 +20,6 @@ public class PlayerManager : Photon.PunBehaviour, IPunObservable {
 
 		DontDestroyOnLoad (this.gameObject);
 
-		if (Beams == null)
-		{
-			Debug.LogError ("<Color=Red><a>Missing</a></Color> Beams Reference.", this);
-		} else
-		{
-			Beams.SetActive (false);
-		}
 	}
 
 
@@ -66,10 +59,6 @@ public class PlayerManager : Photon.PunBehaviour, IPunObservable {
 		if (photonView.isMine)
 		{
 			ProcessInput ();
-		}
-		if (Beams != null && isFiring != Beams.GetActive ())
-		{
-			Beams.SetActive (isFiring);
 		}
 	}
 

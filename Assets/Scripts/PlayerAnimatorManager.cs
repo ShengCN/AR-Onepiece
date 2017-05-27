@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PlayerAnimatorManager : MonoBehaviour {
+public class PlayerAnimatorManager : Photon.MonoBehaviour {
 	private Animator animator;
 	public float DirectionDampTime = .25f;
 
@@ -18,6 +18,11 @@ public class PlayerAnimatorManager : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
+		if( photonView.isMine == false && PhotonNetwork.connected == true )
+		{
+			return;
+		}
+
 		if (!animator)
 		{
 			return;
