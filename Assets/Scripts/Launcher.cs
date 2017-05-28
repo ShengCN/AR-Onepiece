@@ -90,12 +90,12 @@ public class Launcher : Photon.PunBehaviour {
 		// #Critical: We only load if we are the first player, else we rely on  PhotonNetwork.automaticallySyncScene to sync our instance scene.
 		if (PhotonNetwork.room.PlayerCount == 1)
 		{
-			Debug.Log("We load the 'Game_Scene' ");
+			Debug.Log("We load the 'Room for 1' ");
 
 
 			// #Critical
 			// Load the Room Level. 
-			PhotonNetwork.LoadLevel("Game_Scene");
+			PhotonNetwork.LoadLevel("Room_For 1");
 		}
 	}
 	#endregion

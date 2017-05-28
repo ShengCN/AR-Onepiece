@@ -55,7 +55,7 @@ public class GameManager : Photon.PunBehaviour{
 			Debug.LogError( "PhotonNetwork : Trying to Load a level but we are not the master Client" );
 		}
 		Debug.Log( "PhotonNetwork : Loading Level : " + PhotonNetwork.room.PlayerCount );
-		PhotonNetwork.LoadLevel("Game_Scene");
+		PhotonNetwork.LoadLevel("Room_For "+PhotonNetwork.room.playerCount);
 	}
 
 
