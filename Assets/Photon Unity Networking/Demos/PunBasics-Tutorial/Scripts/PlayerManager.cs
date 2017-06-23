@@ -7,13 +7,10 @@
 // </summary>
 // <author>developer@exitgames.com</author>
 // --------------------------------------------------------------------------------------------------------------------
-
-#if UNITY_5 && (!UNITY_5_0 && !UNITY_5_1 && !UNITY_5_2 && !UNITY_5_3) || UNITY_6
-#define UNITY_MIN_5_4
-#endif
-
+using System;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using Hashtable = ExitGames.Client.Photon.Hashtable;
 
 namespace ExitGames.Demos.DemoAnimator
 {
@@ -28,22 +25,36 @@ namespace ExitGames.Demos.DemoAnimator
         [Tooltip("The Player's UI GameObject Prefab")]
         public GameObject PlayerUiPrefab;
 
-        [Tooltip("The Beams GameObject to control")]
-        public GameObject Beams;
-
         [Tooltip("The current Health of our player")]
         public float Health = 1f;
 
         [Tooltip("The local player instance. Use this to know if the local player is represented in the Scene")]
         public static GameObject LocalPlayerInstance;
 
+		public int scorePerRound = 0;
+		public static bool isPotentialRallied
+		{
+			get;
+			set;
+		}
+
+		public static bool isBothRallied;
+
+		public int Score
+		{
+			get;
+			set;
+		}
+		public static int currentPeerID;
+		public static Action<String> hit;
+
+		private string localID;
         #endregion
 
         #region Private Variables
 
         //True, when the user is firing
         bool IsFiring;
-
         #endregion
 
         #region MonoBehaviour CallBacks
@@ -53,25 +64,17 @@ namespace ExitGames.Demos.DemoAnimator
         /// </summary>
         public void Awake()
         {
-            if (this.Beams == null)
-            {
-                Debug.LogError("<Color=Red><b>Missing</b></Color> Beams Reference.", this);
-            }
-            else
-            {
-                this.Beams.SetActive(false);
-            }
-
             // #Important
             // used in GameManager.cs: we keep track of the localPlayer instance to prevent instanciation when levels are synchronized
             if (photonView.isMine)
             {
                 LocalPlayerInstance = gameObject;
-            }
+				localID = Convert.ToString(PhotonNetwork.player.ID);
+			}
 
             // #Critical
             // we flag as don't destroy on load so that instance survives level synchronization, thus giving a seamless experience when levels load.
-            DontDestroyOnLoad(gameObject);
+//            DontDestroyOnLoad(gameObject);
         }
 
         /// <summary>
@@ -93,7 +96,7 @@ namespace ExitGames.Demos.DemoAnimator
                 Debug.LogError("<Color=Red><b>Missing</b></Color> CameraWork Component on player Prefab.", this);
             }
 
-            // Create the UI
+//            // Create the UI
             if (this.PlayerUiPrefab != null)
             {
                 GameObject _uiGo = Instantiate(this.PlayerUiPrefab) as GameObject;
@@ -125,24 +128,23 @@ namespace ExitGames.Demos.DemoAnimator
         /// Show and hide the beams
         /// Watch for end of game, when local player health is 0.
         /// </summary>
-        public void Update()
-        {
-            // we only process Inputs and check health if we are the local player
-            if (photonView.isMine)
-            {
-                this.ProcessInputs();
+//        public void Update()
+//        {
+//            // we only process Inputs and check health if we are the local player
+//            if (photonView.isMine)
+//            {
+//				PlayerManager.UpdateScoreOnPhoton ();
+//            }
+//				
+//        }
 
-                if (this.Health <= 0f)
-                {
-                    GameManager.Instance.LeaveRoom();
-                }
-            }
-
-            if (this.Beams != null && this.IsFiring != this.Beams.GetActive())
-            {
-                this.Beams.SetActive(this.IsFiring);
-            }
-        }
+//		public void FixedUpdate()
+//		{
+//			if (photonView.isMine)
+//			{
+//				PlayerManager.UpdateScoreOnPhoton ();
+//			}
+//		}
 
         /// <summary>
         /// MonoBehaviour method called when the Collider 'other' enters the trigger.
@@ -157,41 +159,70 @@ namespace ExitGames.Demos.DemoAnimator
                 return;
             }
 
-
             // We are only interested in Beamers
             // we should be using tags but for the sake of distribution, let's simply check by name.
-            if (!other.name.Contains("Beam"))
-            {
-                return;
-            }
+    
+			if (other.tag == "Untagged")
+				return;
 
-            this.Health -= 0.1f;
-        }
+			if (hit != null)
+			{
+				Debug.Log ("Input tag:"+other.tag);
+
+				String tmp = other.tag;
+				hit (tmp);
+			}
+            return;
+            
+//
+//            this.Health -= 0.1f;
+		}
 
         /// <summary>
         /// MonoBehaviour method called once per frame for every Collider 'other' that is touching the trigger.
         /// We're going to affect health while the beams are interesting the player
         /// </summary>
         /// <param name="other">Other.</param>
-        public void OnTriggerStay(Collider other)
-        {
-            // we dont' do anything if we are not the local player.
-            if (!photonView.isMine)
-            {
-                return;
-            }
+//        public void OnTriggerStay(Collider other)
+//        {
+//            // we dont' do anything if we are not the local player.
+//            if (!photonView.isMine)
+//            {
+//                return;
+//            }
+//			if (other.tag == "Untagged")
+//				return;
+//			
+//			String info = other.tag;
+//			hit (info);
+//        }
+//
+		public void OnTriggerExit(Collider other)
+		{
 
-            // We are only interested in Beamers
-            // we should be using tags but for the sake of distribution, let's simply check by name.
-            if (!other.name.Contains("Beam"))
-            {
-                return;
-            }
+			if (other.tag == "Untagged")
+				return;
+			
+			// we dont' do anything if we are not the local player.
+			if (!photonView.isMine)
+			{
+				return;
+			}
 
-            // we slowly affect health when beam is constantly hitting us, so player has to move to prevent death.
-            this.Health -= 0.1f*Time.deltaTime;
-        }
+			if (other.tag == "Chest0" || other.tag == "Chest1" || other.tag == "Chest2")
+			{
+//				Debug.Log ("PlayerExit");
+				String info = "PlayerExitChest";
+				hit (info);
+			}
 
+			if (other.tag == "RallyPoint0"||other.tag == "RallyPoint1")
+			{
+				//				Debug.Log ("RallyPoint");
+				String info = "PlayerExitRallyPoint";
+				hit (info);
+			}
+		}
 
         #if !UNITY_MIN_5_4
         /// <summary>See CalledOnLevelWasLoaded. Outdated in Unity 5.4.</summary>
@@ -238,53 +269,53 @@ namespace ExitGames.Demos.DemoAnimator
         /// </summary>
         void ProcessInputs()
         {
-            if (Input.GetButtonDown("Fire1"))
-            {
-                // we don't want to fire when we interact with UI buttons for example. IsPointerOverGameObject really means IsPointerOver*UI*GameObject
-                // notice we don't use on on GetbuttonUp() few lines down, because one can mouse down, move over a UI element and release, which would lead to not lower the isFiring Flag.
-                if (EventSystem.current.IsPointerOverGameObject())
-                {
-                    //	return;
-                }
+//            if (Input.GetButtonDown("Fire1"))
+//            {
+//                // we don't want to fire when we interact with UI buttons for example. IsPointerOverGameObject really means IsPointerOver*UI*GameObject
+//                // notice we don't use on on GetbuttonUp() few lines down, because one can mouse down, move over a UI element and release, which would lead to not lower the isFiring Flag.
+//                if (EventSystem.current.IsPointerOverGameObject())
+//                {
+//                    //	return;
+//                }
+//
+//                if (!this.IsFiring)
+//                {
+//                    this.IsFiring = true;
+//                }
+//            }
 
-                if (!this.IsFiring)
-                {
-                    this.IsFiring = true;
-                }
-            }
-
-            if (Input.GetButtonUp("Fire1"))
-            {
-                if (this.IsFiring)
-                {
-                    this.IsFiring = false;
-                }
-            }
+//            if (Input.GetButtonUp("Fire1"))
+//            {
+//                if (this.IsFiring)
+//                {
+//                    this.IsFiring = false;
+//                }
+//            }
         }
 
         #endregion
 
-        /*
-        #region IPunObservable implementation
+        
+//        #region IPunObservable implementation
+//
+//		void IPunObservable.OnPhotonSerializeView (PhotonStream stream, PhotonMessageInfo info)
+//		{
+//			if (stream.isWriting)
+//			{
+//				// We own this player: send the others our data
+//				stream.SendNext(IsFiring);
+//				stream.SendNext(Health);
+//			}
+//            else
+//            {
+//				// Network player, receive data
+//				this.IsFiring = (bool)stream.ReceiveNext();
+//				this.Health = (float)stream.ReceiveNext();
+//			}
+//		}
+//
+//        #endregion'
 
-		void IPunObservable.OnPhotonSerializeView (PhotonStream stream, PhotonMessageInfo info)
-		{
-			if (stream.isWriting)
-			{
-				// We own this player: send the others our data
-				stream.SendNext(IsFiring);
-				stream.SendNext(Health);
-			}
-            else
-            {
-				// Network player, receive data
-				this.IsFiring = (bool)stream.ReceiveNext();
-				this.Health = (float)stream.ReceiveNext();
-			}
-		}
-
-        #endregion
-        */
 
         #region IPunObservable implementation
 
@@ -293,16 +324,32 @@ namespace ExitGames.Demos.DemoAnimator
             if (stream.isWriting)
             {
                 // We own this player: send the others our data
-                stream.SendNext(this.IsFiring);
-                stream.SendNext(this.Health);
+				stream.SendNext (Score);
             }
             else
             {
                 // Network player, receive data
-                this.IsFiring = (bool)stream.ReceiveNext();
-                this.Health = (float)stream.ReceiveNext();
+				Score = (int)stream.ReceiveNext ();
             }
         }
+
+		public void UpdateScoreOnPhoton()
+		{
+			if (!photonView.isMine)
+				return;
+
+
+			var personalProperties = PhotonNetwork.room.CustomProperties;
+			if (personalProperties.ContainsKey (localID))
+			{
+				personalProperties [localID] = Score.ToString();
+				Debug.LogError ("In update score: "+Score);
+			} else
+			{
+				personalProperties.Add (localID, Score.ToString());
+			}
+			PhotonNetwork.room.SetCustomProperties (personalProperties);
+		}
 
         #endregion
     }

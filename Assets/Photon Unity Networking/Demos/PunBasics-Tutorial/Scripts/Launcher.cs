@@ -75,7 +75,6 @@ namespace ExitGames.Demos.DemoAnimator
 			// this makes sure we can use PhotonNetwork.LoadLevel() on the master client and all clients in the same room sync their level automatically
 			PhotonNetwork.automaticallySyncScene = true;
 
-
 		}
 
 		#endregion
@@ -111,13 +110,14 @@ namespace ExitGames.Demos.DemoAnimator
 				LogFeedback("Joining Room...");
 				// #Critical we need at this point to attempt joining a Random Room. If it fails, we'll get notified in OnPhotonRandomJoinFailed() and we'll create one.
 				PhotonNetwork.JoinRandomRoom();
-				PhotonNetwork.JoinRandomRoom(null,(byte)(2));
+//				PhotonNetwork.JoinRandomRoom(null,(byte)(2));
 			}else{
 
 				LogFeedback("Connecting...");
 				
 				// #Critical, we must first and foremost connect to Photon Online Server.
-				PhotonNetwork.ConnectUsingSettings(_gameVersion);
+				PhotonNetwork.ConnectToRegion(CloudRegionCode.cn, _gameVersion);
+//				PhotonNetwork.ConnectUsingSettings(_gameVersion);
 			}
 		}
 

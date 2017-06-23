@@ -56,7 +56,7 @@ namespace ExitGames.Demos.DemoAnimator
 		/// </summary>
 		void Awake(){
 
-			this.GetComponent<Transform>().SetParent (GameObject.Find("Canvas").GetComponent<Transform>());
+			this.GetComponent<Transform>().SetParent (GameObject.Find("Game Canvas").GetComponent<Transform>());
 		}
 
 		/// <summary>
@@ -99,6 +99,10 @@ namespace ExitGames.Demos.DemoAnimator
 				this.transform.position = Camera.main.WorldToScreenPoint (_targetPosition) + ScreenOffset;
 			}
 
+			// Check if is mini widden map
+			var miniWiddenMap = GameObject.FindWithTag("miniWiddenCamera");
+			if (miniWiddenMap != null && miniWiddenMap.GetActive ())
+				this.gameObject.SetActive (false);
 		}
 
 
@@ -133,7 +137,8 @@ namespace ExitGames.Demos.DemoAnimator
 			}
 
 			if (PlayerNameText != null) {
-				PlayerNameText.text = _target.photonView.owner.NickName;
+				if(_target.photonView.owner.NickName!=null)
+					PlayerNameText.text = _target.photonView.owner.NickName;
 			}
 		}
 

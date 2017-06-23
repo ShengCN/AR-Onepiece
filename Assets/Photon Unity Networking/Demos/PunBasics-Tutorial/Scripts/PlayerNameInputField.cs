@@ -29,12 +29,12 @@ namespace ExitGames.Demos.DemoAnimator
 		#endregion
 
 		#region MonoBehaviour CallBacks
-		
+
 		/// <summary>
 		/// MonoBehaviour method called on GameObject by Unity during initialization phase.
 		/// </summary>
 		void Start () {
-		
+
 			string defaultName = "";
 			InputField _inputField = this.GetComponent<InputField>();
 
@@ -51,7 +51,7 @@ namespace ExitGames.Demos.DemoAnimator
 		}
 
 		#endregion
-		
+
 		#region Public Methods
 
 		/// <summary>
@@ -65,7 +65,7 @@ namespace ExitGames.Demos.DemoAnimator
 
 			PlayerPrefs.SetString(playerNamePrefKey,value);
 		}
-		
+
 		#endregion
 	}
 }

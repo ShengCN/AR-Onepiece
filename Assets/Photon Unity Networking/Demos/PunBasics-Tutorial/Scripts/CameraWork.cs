@@ -16,13 +16,13 @@ namespace ExitGames.Demos.DemoAnimator
 	/// <summary>
 	/// Camera work. Follow a target
 	/// </summary>
-	public class CameraWork : MonoBehaviour
+	public class CameraWork : Photon.MonoBehaviour
 	{
 
 		#region Public Properties
 
 		[Tooltip("The distance in the local x-z plane to the target")]
-	    public float distance = 7.0f;
+	    public float distance = 2.0f;
 
 		[Tooltip("The height we want the camera to be above the target")]
 	    public float height = 3.0f;
@@ -36,14 +36,15 @@ namespace ExitGames.Demos.DemoAnimator
 		[Tooltip("Set this as false if a component of a prefab being instanciated by Photon Network, and manually call OnStartFollowing() when and if needed.")]
 		public bool followOnStart = false;
 
-		public float testY = 0.01f;
-
+		public float cameraHeight = 2f;
 		#endregion
 		
 		#region Private Properties
 
 		// cached transform of the target
 		Transform cameraTransform;
+		Transform minicameraTransform;
+		public float miniCameraHeight = 20f;
 
 		// maintain a flag internally to reconnect if target is lost or camera is switched
 		bool isFollowing;
@@ -63,6 +64,7 @@ namespace ExitGames.Demos.DemoAnimator
 		/// </summary>
 		void Start()
 		{
+
 			// Start following the target if wanted.
 			if (followOnStart)
 			{
@@ -76,6 +78,12 @@ namespace ExitGames.Demos.DemoAnimator
 		/// </summary>
 		void LateUpdate()
 		{
+			// Prevent control is connected to Photon and represent the localPlayer
+			if( photonView.isMine == false && PhotonNetwork.connected == true )
+			{
+				return;
+			}
+
 			// The transform target may not destroy on level load, 
 			// so we need to cover corner cases where the Main Camera is different everytime we load a new scene, and reconnect when that happens
 			if (cameraTransform == null && isFollowing)
@@ -86,6 +94,9 @@ namespace ExitGames.Demos.DemoAnimator
 			// only follow is explicitly declared
 			if (isFollowing) {
 				Apply ();
+				Vector3 tmp = this.transform.position;
+				tmp.y = miniCameraHeight;
+				minicameraTransform.position = tmp;
 			}
 		}
 
@@ -100,6 +111,7 @@ namespace ExitGames.Demos.DemoAnimator
 		public void OnStartFollowing()
 		{	      
 			cameraTransform = Camera.main.transform;
+			minicameraTransform = GameObject.FindWithTag ("Minicamera").transform;
 			isFollowing = true;
 			// we don't smooth anything, we go straight to the right camera shot
 			Cut();
@@ -118,7 +130,7 @@ namespace ExitGames.Demos.DemoAnimator
 
 	        // Calculate the current & target rotation angles
 			float originalTargetAngle = transform.eulerAngles.y;
-	        float currentAngle = cameraTransform.eulerAngles.y;
+			float currentAngle = cameraTransform.eulerAngles.y;
 
 	        // Adjust real target angle when camera is locked
 	        float targetAngle = originalTargetAngle;
@@ -170,7 +182,7 @@ namespace ExitGames.Demos.DemoAnimator
 	        Vector3 offsetToCenter = centerPos - cameraPos;
 
 	        // Generate base rotation only around y-axis
-			Quaternion yRotation = Quaternion.LookRotation( new Vector3( offsetToCenter.x, testY, offsetToCenter.z ) );
+	        Quaternion yRotation = Quaternion.LookRotation( new Vector3( offsetToCenter.x, cameraHeight, offsetToCenter.z ) );
 
 	        Vector3 relativeOffset = Vector3.forward * distance + Vector3.down * height;
 	        cameraTransform.rotation = yRotation * Quaternion.LookRotation( relativeOffset );

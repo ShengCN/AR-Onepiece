@@ -1,7 +1,8 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Runtime.InteropServices;
 
-public class WalkingOrc : MonoBehaviour
+public class WalkingOrc : Photon.MonoBehaviour 
 {
 
 	private Animator animator;
@@ -9,8 +10,8 @@ public class WalkingOrc : MonoBehaviour
 	public float walkspeed = 5;
 	private float horizontal;
 	private float vertical;
-	private float rotationDegreePerSecond = 1000;
 	private bool isAttacking = false;
+	private CharacterController character;
 
 	public GameObject gamecam;
 	public Vector2 camPosition;
@@ -19,42 +20,50 @@ public class WalkingOrc : MonoBehaviour
 
 	public GameObject[] characters;
 	public int currentChar = 0;
+	public float h;
+	public float v;
+	public float speed;
+	private float xCache;
+	private float yCache;
+	public bool isDebug = true;
 
+	// For rotation
+	private float newY;
+	private float oldY;
+	private float dY;
+//	private float ratio = 38f / 9f;
+	private float ratio = 7f;
 
 	void Start()
 	{
-		setCharacter(0);
+//		this.GetComponent<PhotonView>().RPC("RPC_SetCharacter", PhotonTargets.All,1);
+		character = GetComponent<CharacterController> ();
+		setCharacter (1);
+
+		xCache = getX ();
+		yCache = getY ();
+		speed = 18.5f;
+		Debug.Log ("Current X: " + xCache + " Y: " + yCache);
 	}
 
 	void FixedUpdate()
 	{
-		if (animator && !dead)
+		// Prevent control is connected to Photon and represent the localPlayer
+		if( photonView.isMine == false && PhotonNetwork.connected == true )
 		{
-			//walk
-			horizontal = Input.GetAxis("Horizontal");
-			vertical = Input.GetAxis("Vertical");
-
-			Vector3 stickDirection = new Vector3(horizontal, 0, vertical);
-			float speedOut;
-
-			if (stickDirection.sqrMagnitude > 1) stickDirection.Normalize();
-
-			if (!isAttacking)
-				speedOut = stickDirection.sqrMagnitude;
-			else
-				speedOut = 0;
-
-			if (stickDirection != Vector3.zero && !isAttacking)
-				transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(stickDirection, Vector3.up), rotationDegreePerSecond * Time.deltaTime);
-			GetComponent<Rigidbody>().velocity = transform.forward * speedOut * walkspeed + new Vector3(0, GetComponent<Rigidbody>().velocity.y, 0);
-
-			animator.SetFloat("Speed", speedOut);
-
+			return;
 		}
+
 	}
 
 	void Update()
 	{
+		// Prevent control is connected to Photon and represent the localPlayer
+		if( photonView.isMine == false && PhotonNetwork.connected == true )
+		{
+			return;
+		}
+
 		if (!dead)
 		{
 			// move camera
@@ -62,7 +71,6 @@ public class WalkingOrc : MonoBehaviour
 				gamecam.transform.position = transform.position + new Vector3(0, camPosition.x, -camPosition.y);
 
 			// attack
-
 			if (Input.GetButtonDown("Fire1") || Input.GetButtonDown("Jump") && !isAttacking)
 			{
 				isAttacking = true;
@@ -75,24 +83,63 @@ public class WalkingOrc : MonoBehaviour
 			animator.SetBool("isAttacking", isAttacking);
 
 			//switch character
-
 			if (Input.GetKeyDown("left"))
 			{
-				setCharacter(-1);
+//				setCharacter(-1);
+				this.GetComponent<PhotonView>().RPC("RPC_SetCharacter", PhotonTargets.All,1);
 				isAttacking = true;
 				StartCoroutine(stopAttack(1f));
 			}
 
 			if (Input.GetKeyDown("right"))
 			{
-				setCharacter(1);
+				this.GetComponent<PhotonView>().RPC("RPC_SetCharacter", PhotonTargets.All,1);
 				isAttacking = true;
 				StartCoroutine(stopAttack(1f));
 			}
 
-			// death
-			if (Input.GetKeyDown("m"))
-				StartCoroutine(selfdestruct());
+			if (animator && !dead)
+			{
+				CheckSwitchPlayer ();
+
+				//walk
+				horizontal = Input.GetAxis ("Horizontal");
+				vertical = Input.GetAxis ("Vertical");
+
+				AnimationMove (horizontal, vertical);
+				if (!transform.localPosition.y.AlmostEquals (5.4f, 0.1f))
+				{
+					var tmpPos = transform.localPosition;
+					tmpPos.y = 5.4f;
+					transform.localPosition = tmpPos;
+				}
+
+				// For Debug
+				if (Input.anyKey && !ExitGames.Demos.DemoAnimator.GameManager.isARCounting)
+				{
+					 
+					AnimationMove (0f, 0.02f);
+				}
+
+				// Bluetooth motion module
+				// Get changed Movement
+				float tmp = getX ();
+				float xChanged = tmp - xCache;
+				xCache = tmp;
+				tmp = getY ();
+				float yChanged = tmp - yCache;
+				yCache = tmp;
+				Vector2 tmpMovement = new Vector2 (xChanged, yChanged);
+				Vector2 minimunMovement = new Vector2 (0.2f, 0.01f);
+				if (tmpMovement.magnitude < minimunMovement.magnitude)
+				{
+					return;
+				}
+
+				AnimationMove (0f, tmpMovement.magnitude);
+				if (!xChanged.AlmostEquals (0f, 0.001f) && !yChanged.AlmostEquals (0f, 0.001F))
+					Debug.Log ("Changed X: " + xChanged + " Y: " + yChanged);
+			}
 		}
 
 	}
@@ -107,7 +154,6 @@ public class WalkingOrc : MonoBehaviour
 	public IEnumerator selfdestruct()
 	{
 		animator.SetTrigger("isDead");
-		GetComponent<Rigidbody>().velocity = Vector3.zero;
 		dead = true;
 
 		yield return new WaitForSeconds(1.3f);
@@ -136,8 +182,8 @@ public class WalkingOrc : MonoBehaviour
 					child.GetComponent<triggerProjectile>().clearProjectiles();
 			}
 		}
-
 		animator = GetComponentInChildren<Animator>();
+
 	}
 
 	public void activateTrails(bool state)
@@ -148,4 +194,53 @@ public class WalkingOrc : MonoBehaviour
 			tt.enabled = state;
 		}
 	}
+
+	/// <summary>
+	/// Animations the move.
+	/// </summary>
+	/// <param name="x">The x coordinate that character moves.</param>
+	/// <param name="y">The y coordinate that character moves.</param>
+	void AnimationMove(float x, float y)
+	{
+		if (x.AlmostEquals (0f,0.0001f) && y.AlmostEquals (0f,0.0001f))
+		{
+			animator.SetFloat ("Speed",0f);
+			return;
+		}
+
+
+		Vector3 move = new Vector3 (x*ratio, 0f, y*ratio);
+		move = transform.TransformDirection (move);
+
+		animator.SetFloat ("Speed", 100f);
+		character.Move (move);
+	}
+
+	void CheckSwitchPlayer()
+	{
+		newY = Input.acceleration.y;
+		dY = newY - oldY;
+		oldY = newY;
+
+		if (dY > 1.5f || dY < -1.5f)
+		{
+			Debug.Log ("Happened Switch!");
+			Handheld.Vibrate ();
+			// Switch
+			this.GetComponent<PhotonView>().RPC("RPC_SetCharacter", PhotonTargets.All,1);
+
+		}
+	}
+
+	[PunRPC]
+	void RPC_SetCharacter(int i)
+	{
+		setCharacter (i);
+	}
+
+	// Blue Tooth extern functions
+	[DllImport("__Internal")]
+	private static extern float getX ();
+	[DllImport("__Internal")]
+	private static extern float getY ();
 }

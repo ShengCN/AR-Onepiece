@@ -23,3 +23,4 @@
 /Users/Shared/Unity/AR-Onepiece/Temp/bin/Debug/Unity.CecilTools.dll
 /Users/Shared/Unity/AR-Onepiece/Temp/bin/Debug/Mono.Cecil.Pdb.dll
 /Users/Shared/Unity/AR-Onepiece/Temp/bin/Debug/Mono.Cecil.Mdb.dll
+/Users/Shared/Unity/AR-Onepiece/Temp/bin/Debug/Vuforia.UnityExtensions.dll
