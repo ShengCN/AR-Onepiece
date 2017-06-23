@@ -1,0 +1,21 @@
+fileFormatVersion: 2
+guid: 21187f2df876b4c04bfd3267f203b29d
+timeCreated: 1496477603
+licenseType: Free
+TrueTypeFontImporter:
+  serializedVersion: 4
+  fontSize: 16
+  forceTextureCase: -2
+  characterSpacing: 0
+  characterPadding: 1
+  includeFontData: 1
+  fontName: Omega Ruby
+  fontNames:
+  - Omega Ruby
+  fallbackFontReferences: []
+  customCharacters: 
+  fontRenderingMode: 0
+  ascentCalculationMode: 1
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
